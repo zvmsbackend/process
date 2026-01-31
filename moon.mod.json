@@ -2,9 +2,9 @@
   "name": "sennenki/process",
   "version": "0.1.0",
   "readme": "README.mbt.md",
-  "repository": "",
+  "repository": "https://github.com/zvmsbackend/process",
   "license": "Apache-2.0",
-  "keywords": [],
-  "description": "",
+  "keywords": ["native-only", "process", "system"],
+  "description": "A module for spawning and managing system processes.",
   "preferred-target": "native"
 }
