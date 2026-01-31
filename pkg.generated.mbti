@@ -1,0 +1,81 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "sennenki/process"
+
+// Values
+
+// Errors
+pub suberror ProcessError {
+  NotFound(String)
+  PermissionDenied(String)
+  Unknown(String)
+}
+pub impl Eq for ProcessError
+pub impl Show for ProcessError
+
+// Types and methods
+pub(all) struct Child {
+  pid : Int
+  handle : Int64
+  stdin : Int64
+  stdout : Int64
+  stderr : Int64
+}
+pub fn Child::close_stdin(Self) -> Unit
+pub fn Child::kill(Self) -> Unit raise ProcessError
+pub fn Child::pid(Self) -> Int
+pub fn Child::read_stderr(Self, Bytes) -> Int
+pub fn Child::read_stdout(Self, Bytes) -> Int
+pub fn Child::wait(Self) -> ExitStatus raise ProcessError
+pub fn Child::write_stdin(Self, Bytes) -> Int
+
+pub struct Command {
+  program : String
+  args : Array[String]
+  mut env_clear : Bool
+  env_vars : Map[String, String]
+  mut cwd : String?
+  mut stdin : Stdio
+  mut stdout : Stdio
+  mut stderr : Stdio
+}
+pub fn Command::arg(Self, String) -> Self
+pub fn Command::args(Self, Array[String]) -> Self
+pub fn Command::current_dir(Self, String) -> Self
+pub fn Command::env(Self, String, String) -> Self
+pub fn Command::env_clear(Self) -> Self
+pub fn Command::env_remove(Self, String) -> Self
+pub fn Command::new(String) -> Self
+pub fn Command::output(Self) -> Output raise ProcessError
+pub fn Command::spawn(Self) -> Child raise ProcessError
+pub fn Command::stderr(Self, Stdio) -> Self
+pub fn Command::stdin(Self, Stdio) -> Self
+pub fn Command::stdout(Self, Stdio) -> Self
+
+pub struct ExitStatus {
+  exit_code : Int
+}
+pub fn ExitStatus::code(Self) -> Int
+pub fn ExitStatus::success(Self) -> Bool
+pub impl Eq for ExitStatus
+pub impl Show for ExitStatus
+
+pub struct Output {
+  status : ExitStatus
+  stdout : Bytes
+  stderr : Bytes
+}
+pub impl Eq for Output
+pub impl Show for Output
+
+pub(all) enum Stdio {
+  Inherit
+  Piped
+  Null
+}
+pub impl Eq for Stdio
+pub impl Show for Stdio
+
+// Type aliases
+
+// Traits
+

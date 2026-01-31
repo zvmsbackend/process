@@ -1,0 +1,6 @@
+{
+  "import": [
+    { "path": "moonbitlang/core/encoding/utf8", "alias": "utf8" }
+  ],
+  "native-stub": ["process_glue.c"]
+}
