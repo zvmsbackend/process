@@ -344,22 +344,22 @@ pub fn Command::output(self : Command) -> Output raise ProcessError {
   let err_buf = Bytes::make(4096, b'\x00')
   
   // Simple blocking read for now
-  let stdout_res = []
+  let stdout_res = @buffer.new()
   if child.stdout != 0L {
      for {
        let n = ffi_read(child.stdout, out_buf, 4096)
        if n <= 0 { break }
-       out_buf[:n].iter().each(stdout_res.push(_))
+       stdout_res.write_bytesview(out_buf[:n])
      }
      ffi_close(child.stdout) |> ignore
   }
 
-  let stderr_res = []
+  let stderr_res = @buffer.new()
   if child.stderr != 0L {
      for {
        let n = ffi_read(child.stderr, err_buf, 4096)
        if n <= 0 { break }
-       err_buf[:n].iter().each(stderr_res.push(_))
+       stderr_res.write_bytesview(err_buf[:n])
      }
      ffi_close(child.stderr) |> ignore
   }
@@ -369,8 +369,8 @@ pub fn Command::output(self : Command) -> Output raise ProcessError {
   
   {
     status,
-    stdout: Bytes::from_array(stdout_res), 
-    stderr: Bytes::from_array(stderr_res), 
+    stdout: stdout_res.contents(), 
+    stderr: stderr_res.contents(), 
   }
 }
 
