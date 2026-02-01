@@ -20,17 +20,15 @@ This library provides facilities for managing external processes, similar to `st
 ### Simple Output Capture
 
 ```mbt check
+///|
 test {
   // Example: Running a simple command and capturing output
-  let output = try {
-    Command::new("moon")
-      .arg("version")
-      .stdout(Piped) // Capture stdout
-      .output()
-  } catch {
-    e => abort("Failed to execute process: \{e}")
-  }
-
+  let output = Command::new("moon")
+    .arg("version")
+    .stdout(Piped) // Capture stdout
+    .output() catch {
+      e => abort("Failed to execute process: \{e}")
+    }
   if output.status.success() {
     println("Command succeeded!")
     // Access output.stdout
@@ -41,14 +39,15 @@ test {
 ### Manual Pipe Interaction
 
 ```mbt check
+///|
 test {
   // Example: Writing to stdin and reading from stdout
   // Note: "grep" needs to be available in your PATH (use "findstr" on Windows)
-  let child = Command::new("grep") 
-      .arg("hello")
-      .stdin(Piped)
-      .stdout(Piped)
-      .spawn()
+  let child = Command::new("grep")
+    .arg("hello")
+    .stdin(Piped)
+    .stdout(Piped)
+    .spawn()
   // Write to stdin
   let input = @utf8.encode("hello world\ngoodbye\n")
   let _ = child.write_stdin(input)
@@ -58,11 +57,11 @@ test {
   let buf = Bytes::make(1024, b'\x00')
   let n = child.read_stdout(buf)
   if n > 0 {
-      let _out_str = @utf8.decode(buf) // "hello world\n"
-      ()
+    let _out_str = @utf8.decode(buf) // "hello world\n"
+    ()
   }
-  
   let _ = child.wait()
+
 }
 ```
 

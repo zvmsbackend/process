@@ -15,7 +15,7 @@ pub(all) enum Stdio {
 pub struct Command {
   program : String
   args : Array[String]
-  mut env_clear : Bool 
+  mut env_clear : Bool
   env_vars : Map[String, String]
   mut cwd : String?
   mut stdin : Stdio
@@ -154,7 +154,6 @@ pub suberror ProcessError {
   Unknown(String)
 } derive(Show, Eq)
 
-
 ///|
 /// Executes the command as a child process, returning a handle to it.
 ///
@@ -174,7 +173,7 @@ pub fn Command::spawn(self : Command) -> Child raise ProcessError {
     env_buf.write_string("\{k}=\{v}")
     env_buf.write_char('\u0000')
   }
-  
+
   // Flatten Args: "prog\0arg1\0..."
   let args_buf = StringBuilder::new()
   args_buf.write_string(self.program)
@@ -184,18 +183,24 @@ pub fn Command::spawn(self : Command) -> Child raise ProcessError {
     args_buf.write_char('\u0000')
   }
   args_buf.write_char('\u0000')
-
   let cwd_str = match self.cwd {
     Some(s) => s
     None => ""
   }
   let program_bytes = @utf8.encode(self.program + "\u0000")
-  let cwd_bytes = if cwd_str == "" { b"" } else { @utf8.encode(cwd_str + "\u0000") }
+  let cwd_bytes = if cwd_str == "" {
+    b""
+  } else {
+    @utf8.encode(cwd_str + "\u0000")
+  }
 
   // If env_vars is empty and we haven't explicitly cleared it, inherit the parent environment.
   // Otherwise, use the constructed env_buf (which might be empty if we cleared it).
-  let inherit_env = if self.env_vars.is_empty() && !self.env_clear { 1 } else { 0 }
-
+  let inherit_env = if self.env_vars.is_empty() && !self.env_clear {
+    1
+  } else {
+    0
+  }
   let handles = FixedArray::make(4, 0L)
   let res = ffi_spawn(
     program_bytes,
@@ -206,9 +211,8 @@ pub fn Command::spawn(self : Command) -> Child raise ProcessError {
     stdio_to_int(self.stdout),
     stdio_to_int(self.stderr),
     inherit_env,
-    handles
+    handles,
   )
-
   if res != 0 {
     match res {
       -2 => raise NotFound("Program not found: " + self.program)
@@ -216,20 +220,18 @@ pub fn Command::spawn(self : Command) -> Child raise ProcessError {
       _ => raise Unknown("Spawn failed with error code: \{res}")
     }
   }
-
   let proc_handle = handles[0]
   let pid = ffi_get_pid(proc_handle)
-  
-  { 
-    pid, 
+  {
+    pid,
     handle: proc_handle,
     stdin: handles[1],
     stdout: handles[2],
-    stderr: handles[3]
+    stderr: handles[3],
   }
 }
 
-
+///|
 fn stdio_to_int(s : Stdio) -> Int {
   match s {
     Inherit => STDIO_INHERIT
@@ -318,7 +320,7 @@ pub fn Child::wait(self : Child) -> ExitStatus raise ProcessError {
 pub fn Child::kill(self : Child) -> Unit raise ProcessError {
   let res = ffi_kill(self.handle)
   if res != 0 {
-     raise ProcessError::Unknown("Kill failed with error code: \{res}")
+    raise ProcessError::Unknown("Kill failed with error code: \{res}")
   }
 }
 
@@ -327,51 +329,47 @@ pub fn Child::kill(self : Child) -> Unit raise ProcessError {
 ///
 /// This will implicitly set stdout and stderr to `Piped` if they are not already configured.
 pub fn Command::output(self : Command) -> Output raise ProcessError {
-  let cmd_clone = { 
+  let cmd_clone = {
     program: self.program,
     args: self.args,
     env_clear: self.env_clear,
     env_vars: self.env_vars,
     cwd: self.cwd,
-    stdin: Null,   
-    stdout: Piped, 
-    stderr: Piped  
-  } 
-
+    stdin: Null,
+    stdout: Piped,
+    stderr: Piped,
+  }
   let child = cmd_clone.spawn()
-  
   let out_buf = Bytes::make(4096, b'\x00')
   let err_buf = Bytes::make(4096, b'\x00')
-  
+
   // Simple blocking read for now
   let stdout_res = @buffer.new()
   if child.stdout != 0L {
-     for {
-       let n = ffi_read(child.stdout, out_buf, 4096)
-       if n <= 0 { break }
-       stdout_res.write_bytesview(out_buf[:n])
-     }
-     ffi_close(child.stdout) |> ignore
+    for {
+      let n = ffi_read(child.stdout, out_buf, 4096)
+      if n <= 0 {
+        break
+      }
+      stdout_res.write_bytesview(out_buf[:n])
+    }
+    ffi_close(child.stdout) |> ignore
   }
-
   let stderr_res = @buffer.new()
   if child.stderr != 0L {
-     for {
-       let n = ffi_read(child.stderr, err_buf, 4096)
-       if n <= 0 { break }
-       stderr_res.write_bytesview(err_buf[:n])
-     }
-     ffi_close(child.stderr) |> ignore
+    for {
+      let n = ffi_read(child.stderr, err_buf, 4096)
+      if n <= 0 {
+        break
+      }
+      stderr_res.write_bytesview(err_buf[:n])
+    }
+    ffi_close(child.stderr) |> ignore
   }
 
   // Waiting for exit
   let status = child.wait()
-  
-  {
-    status,
-    stdout: stdout_res.contents(), 
-    stderr: stderr_res.contents(), 
-  }
+  { status, stdout: stdout_res.contents(), stderr: stderr_res.contents() }
 }
 
 ///|
@@ -402,7 +400,6 @@ test "ExitStatus" {
   // Constructing private struct for internal testing
   let status = ExitStatus::{ exit_code: 0 }
   inspect(status.success(), content="true")
-  
   let fail = ExitStatus::{ exit_code: 1 }
   inspect(fail.success(), content="false")
 }
